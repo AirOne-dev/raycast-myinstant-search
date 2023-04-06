@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Action, ActionPanel, List } from "@raycast/api";
-import { fetchSounds, playSound, Sound, savePath } from "./sound";
+import { fetchSounds, playSound, Sound, savePath, readAudioMetadata } from "./sound";
 import fs from "fs";
 
 // Empty list for displaying a search prompt
@@ -17,14 +17,15 @@ export default function Command() {
     if (!fs.existsSync(savePath)) return;
 
     const files = fs.readdirSync(savePath);
-    setSoundList((prevSoundList) => [...prevSoundList, { name: 'Downloaded Sounds :', url: '', filename: 'search', isPlaying: false, isDownloading: false}]);
-    files.forEach((file) => {
+    setSoundList((prevSoundList) => [...prevSoundList, { name: '', subtitle: 'Downloaded Sounds :', url: '', filename: 'search', isPlaying: false, isDownloading: false}]);
+    files.forEach(async (file) => {
       const sound: Sound = {
         name: file.replace(".mp3", ""),
         url: "",
         filename: file,
         isPlaying: false,
         isDownloading: false,
+        metadata: await readAudioMetadata(file),
       };
       setSoundList((prevSoundList) => [...prevSoundList, sound]);
     });
@@ -43,7 +44,6 @@ export default function Command() {
   async function playSoundAction(sound: Sound) {
     // Stop the currently playing sound if there is one
     if (afplayState.pid) {
-      console.log(`Killing ${afplayState.pid}`);
       process.kill(afplayState.pid);
       const stoppedSound = soundList.find(
         (snd) => snd.filename === afplayState.name
@@ -72,7 +72,9 @@ export default function Command() {
     } else {
       // Otherwise, download and play the selected sound
       setIsLoading(true);
-      const { pid, onFinished } = await playSound(sound) ?? { pid: null, onFinished: () => {} };
+      updateSoundList({ ...sound, isDownloading: true });
+      const { pid, onFinished } = await playSound(sound) ?? { pid: null, onFinished: () => null };
+      updateSoundList({ ...sound, isDownloading: false });
       setIsLoading(false);
 
       if (pid) {
@@ -111,13 +113,15 @@ export default function Command() {
     >
       {soundList.map((sound, index) => (
         <List.Item
-          key={sound.url ?? index}
+          key={sound.filename + index}
           title={
             (sound.isDownloading ? '⏳ ' : '') +
             (sound.isPlaying ? '🔊 ' : '') +
             (!sound.isPlaying && !sound.isDownloading && sound.filename !== 'search' ? '▶️ ' : '') +
-            sound.name + (sound.isDownloading ? ' (downloading)' : '')
+            sound.name
           }
+          subtitle={sound.subtitle ? sound.subtitle : (sound.isDownloading ? ' (downloading)' : '')}
+          icon={sound.metadata ? `data:image/png;base64, ${sound.metadata.picture}` : undefined}
           actions={
             <ActionPanel>
               <Action title="Select" onAction={() => playSoundAction(sound)} />
