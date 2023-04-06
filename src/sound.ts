@@ -108,7 +108,7 @@ export async function readAudioMetadata(source: string): Promise<AudioMetadata> 
             const buffer = await response.buffer();
             metadata = await mm.parseBuffer(buffer, response.headers.get("content-type"));
         } else {
-            metadata = await mm.parseFile(source);
+            metadata = await mm.parseFile(`${savePath}/${source}`);
         }
 
         const { title, artist, album } = metadata.common;

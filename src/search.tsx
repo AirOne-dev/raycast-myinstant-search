@@ -118,10 +118,10 @@ export default function Command() {
             (sound.isDownloading ? '⏳ ' : '') +
             (sound.isPlaying ? '🔊 ' : '') +
             (!sound.isPlaying && !sound.isDownloading && sound.filename !== 'search' ? '▶️ ' : '') +
-            sound.name
+            (sound.metadata?.title ? sound.metadata?.title : sound.name)
           }
           subtitle={sound.subtitle ? sound.subtitle : (sound.isDownloading ? ' (downloading)' : '')}
-          icon={sound.metadata ? `data:image/png;base64, ${sound.metadata.picture}` : undefined}
+          icon={sound.metadata?.picture ? `data:image/png;base64, ${sound.metadata.picture}` : undefined}
           actions={
             <ActionPanel>
               <Action title="Select" onAction={() => playSoundAction(sound)} />
