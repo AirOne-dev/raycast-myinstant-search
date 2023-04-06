@@ -17,6 +17,7 @@ export default function Command() {
     if (!fs.existsSync(savePath)) return;
 
     const files = fs.readdirSync(savePath);
+    setSoundList((prevSoundList) => [...prevSoundList, { name: 'Downloaded Sounds :', url: '', filename: 'search', isPlaying: false, isDownloading: false}]);
     files.forEach((file) => {
       const sound: Sound = {
         name: file.replace(".mp3", ""),
