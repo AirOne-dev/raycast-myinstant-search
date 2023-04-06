@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { load as cheerioLoad } from "cheerio";
 import fs from "fs";
 
-const savePath = `${process.env.HOME}/Documents/raycast-my-instant`;
+export const savePath = `${process.env.HOME}/Documents/raycast-my-instant`;
 
 export type Sound = {
   name: string;

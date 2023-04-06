@@ -1,15 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Action, ActionPanel, List } from "@raycast/api";
-import { fetchSounds, playSound, Sound } from "./sound";
+import { fetchSounds, playSound, Sound, savePath } from "./sound";
+import fs from "fs";
 
 // Empty list for displaying a search prompt
-const emptySoundList = [{ name: '🔍 Press [Enter] to search', url: '', filename: 'search', isPlaying: false, isDownloading: false }] as [Sound];
+const emptySoundList = [{ name: '🔍 Press [Enter] to search online', url: '', filename: 'search', isPlaying: false, isDownloading: false }] as [Sound];
 
 export default function Command() {
   const [soundList, setSoundList] = useState([...emptySoundList]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [afplayState, setAfplayState] = useState<{name: null | string, pid: number | null}>({ name: null, pid: null });
+
+  // Load downloaded sounds from the save directory
+  function loadDownloadedSounds() {
+    if (!fs.existsSync(savePath)) return;
+
+    const files = fs.readdirSync(savePath);
+    files.forEach((file) => {
+      const sound: Sound = {
+        name: file.replace(".mp3", ""),
+        url: "",
+        filename: file,
+        isPlaying: false,
+        isDownloading: false,
+      };
+      setSoundList((prevSoundList) => [...prevSoundList, sound]);
+    });
+  }
 
   // Update a specific sound in the sound list
   function updateSoundList(newSound: Sound) {
@@ -78,6 +96,11 @@ export default function Command() {
     setSearchText(text);
     setSoundList([...emptySoundList]);
   }
+
+  // Load downloaded sounds on component mount
+  useEffect(() => {
+    loadDownloadedSounds();
+  }, []);
 
   return (
     <List
