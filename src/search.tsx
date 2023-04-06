@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Action, ActionPanel, List } from "@raycast/api";
 import { fetchSounds, playSound, Sound } from "./sound";
 
+// Empty list for displaying a search prompt
 const emptySoundList = [{ name: '🔍 Press [Enter] to search', url: '', filename: 'search', isPlaying: false, isDownloading: false }] as [Sound];
 
 export default function Command() {
@@ -10,6 +11,7 @@ export default function Command() {
   const [searchText, setSearchText] = useState("");
   const [afplayState, setAfplayState] = useState<{name: null | string, pid: number | null}>({ name: null, pid: null });
 
+  // Update a specific sound in the sound list
   function updateSoundList(newSound: Sound) {
     setSoundList((prevSoundList) =>
       prevSoundList.map((sound) =>
@@ -18,7 +20,9 @@ export default function Command() {
     );
   }
 
+  // Action to play or stop a sound
   async function playSoundAction(sound: Sound) {
+    // Stop the currently playing sound if there is one
     if (afplayState.pid) {
       console.log(`Killing ${afplayState.pid}`);
       process.kill(afplayState.pid);
@@ -30,11 +34,13 @@ export default function Command() {
       }
     }
 
+    // If clicking on the same sound again, do not replay it
     if (afplayState.name === sound.filename) {
       setAfplayState({ name: null, pid: null });
       return;
     }
 
+    // Perform the search if the sound is the search one
     if (sound.filename === "search") {
       if (searchText.length > 0) {
         setIsLoading(true);
@@ -45,6 +51,7 @@ export default function Command() {
         });
       }
     } else {
+      // Otherwise, download and play the selected sound
       setIsLoading(true);
       const { pid, onFinished } = await playSound(sound) ?? { pid: null, onFinished: () => {} };
       setIsLoading(false);
@@ -53,6 +60,7 @@ export default function Command() {
         setAfplayState({ name: sound.filename, pid });
         updateSoundList({ ...sound, isPlaying: true });
 
+        // Update the playing state once the sound is finished
         onFinished().then(() => {
           updateSoundList({ ...sound, isPlaying: false });
           setAfplayState({ name: null, pid: null });
@@ -65,6 +73,7 @@ export default function Command() {
     }
   }
 
+  // Action for searching
   function searchAction(text: string) {
     setSearchText(text);
     setSoundList([...emptySoundList]);

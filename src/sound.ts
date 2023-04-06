@@ -13,7 +13,7 @@ export type Sound = {
   isDownloading: boolean;
 };
 
-// Fetch sounds from myinstants.com and return JSON a list of sounds
+// Fetch sounds from myinstants.com and return a list of sounds in JSON format
 export async function fetchSounds(title: string) {
   const response = await fetch(`https://www.myinstants.com/fr/search/?name=${encodeURIComponent(title)}`);
   const htmlText = await response.text();
@@ -22,11 +22,13 @@ export async function fetchSounds(title: string) {
 
   const sounds: Sound[] = [];
 
+  // Extract information about the sounds from the buttons
   buttons.each((_, button) => {
     const name = $(button).attr('title')?.replace('Jouer le son de ', '');
     const onclick = $(button).attr('onclick');
     const urlMatch = onclick?.match(/play\('(.+?)',/);
 
+    // Add the sound to the list of sounds if it has been found
     if (name && urlMatch && urlMatch[1]) {
       sounds.push({
         name,
@@ -49,17 +51,18 @@ export async function playSound(sound: Sound) {
     } else {
       // Download the sound
       await new Promise<void>((resolve, reject) => {
-        // download only if the file doesn't exist
+        // Download only if the file doesn't already exist
         if (fs.existsSync(`${savePath}/${sound.filename}`)) {
           resolve();
           return;
         }
 
-        // create the directory if it doesn't exist
+        // Create the directory if it doesn't exist
         if (!fs.existsSync(savePath)) {
           fs.mkdirSync(savePath);
         }
 
+        // Download the sound using curl
         const download = spawn('curl', ['--silent', '-o', `${savePath}/${sound.filename}`, sound.url]);
         download.on('close', (code) => {
           if (code === 0) {
@@ -70,7 +73,7 @@ export async function playSound(sound: Sound) {
         });
       });
 
-      // Play the sound
+      // Play the sound using afplay
       const play = spawn('afplay', [`${savePath}/${sound.filename}`]);
 
       return {
