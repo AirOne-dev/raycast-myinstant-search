@@ -13,11 +13,11 @@ export default function Command() {
   const [afplayState, setAfplayState] = useState<{name: null | string, pid: number | null}>({ name: null, pid: null });
 
   // Load downloaded sounds from the save directory
-  function loadDownloadedSounds() {
+  function loadDownloadedSounds(filter?: string) {
     if (!fs.existsSync(savePath)) return;
 
-    const files = fs.readdirSync(savePath);
-    setSoundList((prevSoundList) => [...prevSoundList, { name: '', subtitle: 'Downloaded Sounds :', url: '', filename: 'search', isPlaying: false, isDownloading: false}]);
+    const files = fs.readdirSync(savePath).filter((file) => file.includes(filter ?? "")).sort();
+    setSoundList((prevSoundList) => [...prevSoundList, { name: '', subtitle: 'Downloaded Sounds :', url: '', filename: '', isPlaying: false, isDownloading: false}]);
     files.forEach(async (file) => {
       const sound: Sound = {
         name: file.replace(".mp3", ""),
@@ -60,7 +60,7 @@ export default function Command() {
     }
 
     // Perform the search if the sound is the search one
-    if (sound.filename === "search") {
+    if (sound.filename === "search" || !sound.subtitle) {
       if (searchText.length > 0) {
         setIsLoading(true);
         fetchSounds(searchText).then((sounds) => {
@@ -98,6 +98,7 @@ export default function Command() {
   function searchAction(text: string) {
     setSearchText(text);
     setSoundList([...emptySoundList]);
+    loadDownloadedSounds(text);
   }
 
   // Action for deleting a sound
@@ -125,7 +126,7 @@ export default function Command() {
               ? '' 
               : (sound.isDownloading ? '⏳ ' : '') +
                 (sound.isPlaying ? '🔊 ' : '') +
-                (!sound.isPlaying && !sound.isDownloading && sound.filename !== 'search' ? '▶️ ' : '')
+                (!sound.isPlaying && !sound.isDownloading && (sound.filename !== 'search' && !sound.subtitle) ? '▶️ ' : '')
             ) +
             (sound.metadata?.title ? sound.metadata?.title : sound.name)
           }
@@ -133,8 +134,8 @@ export default function Command() {
           icon={sound.metadata?.picture ? `data:image/png;base64, ${sound.metadata.picture}` : undefined}
           actions={
             <ActionPanel>
-              <Action title={sound.filename !== 'search' ? 'Play' : 'Search'} onAction={() => playSoundAction(sound)} />
-              {sound.filename !== 'search' && !sound.url && <Action.Trash paths={`${savePath}/${sound.filename}`} onTrash={deleteSoundAction} shortcut={{ modifiers: ["cmd"], key: "delete" }} />}
+              {!sound.subtitle && <Action title={sound.filename !== 'search' ? 'Play' : 'Search'} onAction={() => playSoundAction(sound)} />}
+              {!sound.subtitle && sound.filename !== 'search' && !sound.url && <Action.Trash paths={`${savePath}/${sound.filename}`} onTrash={deleteSoundAction} shortcut={{ modifiers: ["cmd"], key: "delete" }} />}
             </ActionPanel>
           }
         />
