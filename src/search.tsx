@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Action, ActionPanel, List } from "@raycast/api";
 import { fetchSounds, playSound, Sound, savePath, readAudioMetadata } from "./sound";
-import fs from "fs";
+import fs, { PathLike } from "fs";
 
 // Empty list for displaying a search prompt
 const emptySoundList = [{ name: '🔍 Press [Enter] to search online', url: '', filename: 'search', isPlaying: false, isDownloading: false }] as [Sound];
@@ -101,14 +101,9 @@ export default function Command() {
   }
 
   // Action for deleting a sound
-  function deleteSoundAction(sound: Sound) {
-    if (sound.filename === "search") return;
-    
-    const filePath = `${savePath}/${sound.filename}`;
-    if (fs.readFileSync(filePath)) {
-      fs.unlinkSync(filePath);
-      setSoundList((prevSoundList) => prevSoundList.filter((snd) => snd.filename !== sound.filename));
-    }
+  function deleteSoundAction(path: PathLike | PathLike[]) {
+    const filename = path.toString().split("/").pop();
+    setSoundList((prevSoundList) => prevSoundList.filter((snd) => snd.filename !== filename));
   }
 
   // Load downloaded sounds on component mount
@@ -139,7 +134,7 @@ export default function Command() {
           actions={
             <ActionPanel>
               <Action title="Select" onAction={() => playSoundAction(sound)} />
-              (!sound.url ? <Action title="Delete" onAction={() => deleteSoundAction(sound)} /> : null)
+              <Action.Trash paths={`${savePath}/${sound.filename}`} onTrash={deleteSoundAction} shortcut={{ modifiers: ["cmd"], key: "delete" }} />
             </ActionPanel>
           }
         />
