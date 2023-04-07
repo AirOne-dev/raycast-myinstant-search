@@ -133,8 +133,8 @@ export default function Command() {
           icon={sound.metadata?.picture ? `data:image/png;base64, ${sound.metadata.picture}` : undefined}
           actions={
             <ActionPanel>
-              <Action title="Select" onAction={() => playSoundAction(sound)} />
-              <Action.Trash paths={`${savePath}/${sound.filename}`} onTrash={deleteSoundAction} shortcut={{ modifiers: ["cmd"], key: "delete" }} />
+              <Action title={sound.filename !== 'search' ? 'Play' : 'Search'} onAction={() => playSoundAction(sound)} />
+              {sound.filename !== 'search' && !sound.url && <Action.Trash paths={`${savePath}/${sound.filename}`} onTrash={deleteSoundAction} shortcut={{ modifiers: ["cmd"], key: "delete" }} />}
             </ActionPanel>
           }
         />
