@@ -100,6 +100,17 @@ export default function Command() {
     setSoundList([...emptySoundList]);
   }
 
+  // Action for deleting a sound
+  function deleteSoundAction(sound: Sound) {
+    if (sound.filename === "search") return;
+    
+    const filePath = `${savePath}/${sound.filename}`;
+    if (fs.readFileSync(filePath)) {
+      fs.unlinkSync(filePath);
+      setSoundList((prevSoundList) => prevSoundList.filter((snd) => snd.filename !== sound.filename));
+    }
+  }
+
   // Load downloaded sounds on component mount
   useEffect(() => {
     loadDownloadedSounds();
@@ -115,9 +126,12 @@ export default function Command() {
         <List.Item
           key={sound.filename + index}
           title={
-            (sound.isDownloading ? '⏳ ' : '') +
-            (sound.isPlaying ? '🔊 ' : '') +
-            (!sound.isPlaying && !sound.isDownloading && sound.filename !== 'search' ? '▶️ ' : '') +
+            (sound.metadata?.picture 
+              ? '' 
+              : (sound.isDownloading ? '⏳ ' : '') +
+                (sound.isPlaying ? '🔊 ' : '') +
+                (!sound.isPlaying && !sound.isDownloading && sound.filename !== 'search' ? '▶️ ' : '')
+            ) +
             (sound.metadata?.title ? sound.metadata?.title : sound.name)
           }
           subtitle={sound.subtitle ? sound.subtitle : (sound.isDownloading ? ' (downloading)' : '')}
@@ -125,6 +139,7 @@ export default function Command() {
           actions={
             <ActionPanel>
               <Action title="Select" onAction={() => playSoundAction(sound)} />
+              (!sound.url ? <Action title="Delete" onAction={() => deleteSoundAction(sound)} /> : null)
             </ActionPanel>
           }
         />

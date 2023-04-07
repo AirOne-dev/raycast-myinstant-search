@@ -33,9 +33,10 @@ export async function fetchSounds(title: string) {
 
         // Add the sound to the list of sounds if it has been found
         if (name && urlMatch && urlMatch[1]) {
+            const url = `https://www.myinstants.com${urlMatch[1]}`;
             sounds.push({
                 name,
-                url: `https://www.myinstants.com${urlMatch[1]}`,
+                url,
                 filename: urlMatch[1].split('/').reverse()[0],
                 isPlaying: false,
                 isDownloading: false,
@@ -96,7 +97,7 @@ export type AudioMetadata = {
     title?: string;
     artist?: string;
     album?: string;
-    picture?: Buffer;
+    picture?: string;
 }
 
 export async function readAudioMetadata(source: string): Promise<AudioMetadata> {
@@ -113,7 +114,7 @@ export async function readAudioMetadata(source: string): Promise<AudioMetadata> 
 
         const { title, artist, album } = metadata.common;
 
-        const picture = metadata.common.picture?.[0]?.data;
+        const picture = metadata.common.picture?.[0]?.data.toString('base64');
 
         return { title, artist, album, picture };
     } catch (error) {
