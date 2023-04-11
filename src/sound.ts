@@ -39,7 +39,7 @@ export async function fetchSounds(title: string) {
                 url,
                 filename: urlMatch[1].split('/').reverse()[0],
                 isPlaying: false,
-                isDownloading: false,
+                isDownloading: false
             });
         }
     });

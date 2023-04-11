@@ -60,35 +60,37 @@ export default function Command() {
     }
 
     // Perform the search if the sound is the search one
-    if (sound.filename === "search" || !sound.subtitle) {
-      if (searchText.length > 0) {
+    if(sound.subtitle !== 'Downloaded Sounds :') {
+      if (sound.filename === "search") {
+        if (searchText.length > 0) {
+          setIsLoading(true);
+          fetchSounds(searchText).then((sounds) => {
+            setSoundList(sounds);
+          }).finally(() => {
+            setIsLoading(false);
+          });
+        }
+      } else {
+        // Otherwise, download and play the selected sound
         setIsLoading(true);
-        fetchSounds(searchText).then((sounds) => {
-          setSoundList(sounds);
-        }).finally(() => {
-          setIsLoading(false);
-        });
-      }
-    } else {
-      // Otherwise, download and play the selected sound
-      setIsLoading(true);
-      updateSoundList({ ...sound, isDownloading: true });
-      const { pid, onFinished } = await playSound(sound) ?? { pid: null, onFinished: () => null };
-      updateSoundList({ ...sound, isDownloading: false });
-      setIsLoading(false);
-
-      if (pid) {
-        setAfplayState({ name: sound.filename, pid });
-        updateSoundList({ ...sound, isPlaying: true });
-
-        // Update the playing state once the sound is finished
-        onFinished().then(() => {
-          updateSoundList({ ...sound, isPlaying: false });
-          setAfplayState({ name: null, pid: null });
-        });
-        if (afplayState.name === sound.filename) {
-          updateSoundList({ ...sound, isPlaying: false });
-          setAfplayState({ name: null, pid: null });
+        updateSoundList({ ...sound, isDownloading: true });
+        const { pid, onFinished } = await playSound(sound) ?? { pid: null, onFinished: () => null };
+        updateSoundList({ ...sound, isDownloading: false });
+        setIsLoading(false);
+  
+        if (pid) {
+          setAfplayState({ name: sound.filename, pid });
+          updateSoundList({ ...sound, isPlaying: true });
+  
+          // Update the playing state once the sound is finished
+          onFinished().then(() => {
+            updateSoundList({ ...sound, isPlaying: false });
+            setAfplayState({ name: null, pid: null });
+          });
+          if (afplayState.name === sound.filename) {
+            updateSoundList({ ...sound, isPlaying: false });
+            setAfplayState({ name: null, pid: null });
+          }
         }
       }
     }
